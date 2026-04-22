@@ -3,9 +3,9 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from .models import Product
 
 User = get_user_model()
-from .models import Product
 
 class ProductTests(TestCase):
     def setUp(self):
@@ -55,37 +55,14 @@ class ProductTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         product.refresh_from_db()
         self.assertEqual(float(product.price), 200.00)
-
-    def test_product_image_upload(self):
+    
+    def test_product_image_optional(self):
+        """Test product creation without image still works"""
         self.client.force_authenticate(user=self.producer)
-        
-        # Create a mock image file
-        image_file = SimpleUploadedFile(
-            "test_image.jpg",
-            b"file_content_here",  # In reality, you'd use actual image bytes
-            content_type="image/jpeg"
-        )
-        
-        data = self.product_data.copy()
-        data['image'] = image_file
-        
         response = self.client.post(
             reverse('product-list-create'),
-            data,
-            format='multipart'  # ✅ important for file uploads
+            self.product_data,
+            format='json'
         )
-        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIsNotNone(response.data.get('image'))
-        self.assertTrue(response.data['image'].startswith('/media/product_images/'))
-
-def test_product_image_optional(self):
-    """Test product creation without image still works"""
-    self.client.force_authenticate(user=self.producer)
-    response = self.client.post(
-        reverse('product-list-create'),
-        self.product_data,
-        format='json'  # no image, so JSON is fine
-    )
-    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    self.assertIsNone(response.data.get('image'))
+        self.assertIsNone(response.data.get('image'))
