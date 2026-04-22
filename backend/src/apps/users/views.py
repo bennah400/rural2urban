@@ -8,15 +8,16 @@ class UserRegistrationView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializers = self.get_serializer(data=request.data)
-        serializers.is_valid(raise_exception=True)
-        user = serializers.save()
+        serializer = self.get_serializer(data=request.data)  # fixed variable name
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-        #Generate JWT tokens for immediate login
+        # Generate JWT tokens for immediate login
         refresh = RefreshToken.for_user(user)
+        
         return Response({
             'user': {
-                'phone_number': user.phone_number,
+                'phone_number': str(user.phone_number),  # convert PhoneNumber object to string
                 'full_name': user.full_name,
                 'user_type': user.user_type,
             },
