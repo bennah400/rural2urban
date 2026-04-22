@@ -116,3 +116,41 @@ class UserRegistrationTests(TestCase):
         user = User.objects.get(phone_number=minimal_payload['phone_number'])
         self.assertEqual(user.user_type, 'consumer')
         self.assertIsNone(user.farm_name)
+    
+    def test_login_success(self):
+        """Test successful login returns JWT tokens"""
+        # First register a user
+        self.client.post(self.register_url, self.valid_payload, format='json')
+        
+        # Then login
+        login_payload = {
+            'phone_number': self.valid_payload['phone_number'],
+            'password': self.valid_payload['password']
+        }
+        response = self.client.post(reverse('user-login'), login_payload, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.assertEqual(response.data['user']['phone_number'], self.valid_payload['phone_number'])
+
+    def test_login_invalid_password(self):
+        """Test login with wrong password fails"""
+        self.client.post(self.register_url, self.valid_payload, format='json')
+        
+        login_payload = {
+            'phone_number': self.valid_payload['phone_number'],
+            'password': 'WrongPass123!'
+        }
+        response = self.client.post(reverse('user-login'), login_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_login_nonexistent_phone(self):
+        """Test login with unregistered phone fails"""
+        login_payload = {
+            'phone_number': '+254799999999',
+            'password': 'AnyPass123!'
+        }
+        response = self.client.post(reverse('user-login'), login_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
