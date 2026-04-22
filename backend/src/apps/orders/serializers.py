@@ -40,21 +40,24 @@ class OrderSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        # Auto-set consumer from request user
         validated_data['consumer'] = self.context['request'].user
-        # Copy phone number from user if not provided (for safety)
         if 'phone_number' not in validated_data or not validated_data['phone_number']:
             validated_data['phone_number'] = str(self.context['request'].user.phone_number)
         order = Order.objects.create(**validated_data)
-        
-        # Create order items and deduct stock
+
         for item_data in items_data:
             product = item_data['product']
             quantity = item_data['quantity']
             # Deduct stock
             product.stock_quantity -= quantity
             product.save(update_fields=['stock_quantity'])
-            OrderItem.objects.create(order=order, **item_data)
-        
+            # Create OrderItem with price_at_time from product
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=quantity,
+                price_at_time=product.price  # <-- fix here
+            )
+
         order.update_total()
         return order

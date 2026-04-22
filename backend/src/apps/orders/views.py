@@ -10,19 +10,22 @@ class OrderListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status']
-    
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsConsumer()]   # only consumers can create orders
+        return [permissions.IsAuthenticated()]
+
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'consumer':
             return Order.objects.filter(consumer=user)
         elif user.user_type == 'producer':
-            # Producers see orders that contain their products
             return Order.objects.filter(items__product__producer=user).distinct()
         return Order.objects.none()
-    
+
     def perform_create(self, serializer):
         serializer.save(consumer=self.request.user)
-
 class OrderRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]

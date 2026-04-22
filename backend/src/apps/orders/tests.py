@@ -44,9 +44,15 @@ class OrderTests(TestCase):
     
     def test_consumer_sees_own_orders(self):
         self.client.force_authenticate(user=self.consumer)
-        # Create an order
-        data = {'delivery_address': 'Nairobi', 'items': [{'product': self.product.id, 'quantity': 1}]}
-        self.client.post(self.order_url, data, format='json')
+        # Create an order with all required fields
+        data = {
+            'delivery_address': 'Nairobi',
+            'phone_number': '+254711111111',   # added missing field
+            'items': [{'product': self.product.id, 'quantity': 1}]
+        }
+        create_response = self.client.post(self.order_url, data, format='json')
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        
         # List orders
         response = self.client.get(self.order_url)
         self.assertEqual(len(response.data), 1)
