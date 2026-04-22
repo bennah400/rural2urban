@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+venv/
+env/
+.env
+*.log
+
+# Django
+*.sqlite3
+db.sqlite3
+/static/
+/media/
+*/migrations/0*.py
+!*/migrations/__init__.py
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI / secrets
+.env
+.secret
