@@ -2,6 +2,12 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
+
+# Define the upload path function BEFORE the Product class
+def product_image_upload_path(instance, filename):
+    """Generate a dynamic upload path: media/product_images/producer_<id>/<filename>"""
+    return f'product_images/producer_{instance.producer.id}/{filename}'
+
 class Product(models.Model):
     # Relationships
     producer = models.ForeignKey(
@@ -22,7 +28,11 @@ class Product(models.Model):
     stock_quantity = models.PositiveIntegerField(default=0)
     
     # Optional fields
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to=product_image_upload_path,   #  changed from 'products/' to function
+        blank=True,
+        null=True
+    )   
     category = models.CharField(max_length=100, blank=True, default='General')
     
     # Status
