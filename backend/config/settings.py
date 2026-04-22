@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'phonenumber_field',
+    'django_filters',
 
     # Your apps
     'src.apps.users',
