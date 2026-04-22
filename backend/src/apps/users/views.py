@@ -1,3 +1,25 @@
-from django.shortcuts import render
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserRegistrationSerializer
 
-# Create your views here.
+class UserRegistrationView(generics.CreateAPIView):
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializers = self.get_serializer(data=request.data)
+        serializers.is_valid(raise_exception=True)
+        user = serializers.save()
+
+        #Generate JWT tokens for immediate login
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'user': {
+                'phone_number': user.phone_number,
+                'full_name': user.full_name,
+                'user_type': user.user_type,
+            },
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=201)

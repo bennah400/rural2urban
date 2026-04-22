@@ -43,8 +43,9 @@ INSTALLED_APPS = [
 
     # Third party
     'rest_framework',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
     'corsheaders',
+    'phonenumber_field',
 
     # Your apps
     'src.apps.users',      

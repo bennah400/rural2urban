@@ -1,11 +1,13 @@
-# apps/users/models.py
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField  # pip install django-phonenumber-field[phonenumbers]
+
 
 class UserManager(BaseUserManager):
-    """Custom manager for CustomUser where phone_number is the unique identifier."""
+    """
+    Custom manager for CustomUser where phone_number is the unique identifier.
+    """
     
     def create_user(self, phone_number, password=None, **extra_fields):
         """
@@ -15,14 +17,14 @@ class UserManager(BaseUserManager):
         if not phone_number:
             raise ValueError('The Phone Number must be set')
         
-        # Normalize phone number (remove spaces, ensure format - we'll do more later)
-        phone_number = self.normalize_phone_number(phone_number)
+        # PhoneNumberField automatically normalizes to E.164 format (e.g., +2547XXXXXXXX)
+        # No manual normalization needed here – the field handles it.
         
         user = self.model(phone_number=phone_number, **extra_fields)
         if password:
             user.set_password(password)
         else:
-            user.set_unusable_password()  # for OTP-based login
+            user.set_unusable_password()  # for OTP-based login later
         user.save(using=self._db)
         return user
     
@@ -40,31 +42,24 @@ class UserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         
         return self.create_user(phone_number, password, **extra_fields)
-    
-    @staticmethod
-    def normalize_phone_number(phone):
-        """Basic normalization – strip whitespace. For production, use phonenumbers library."""
-        return phone.strip()
+
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom User model using phone number as login.
     Replaces Django's default username-based model.
     """
+    
     # Phone number – unique identifier for login and M-Pesa
-    phone_regex = RegexValidator(
-        regex=r'^\+?1?\d{9,15}$',
-        message="Phone number must be entered in format: '+254XXXXXXXXX'. Up to 15 digits."
-    )
-    phone_number = models.CharField(
-        validators=[phone_regex],
-        max_length=15,
+    # Using PhoneNumberField from django-phonenumber-field
+    # Automatically validates and normalizes to international format (+254XXXXXXXXX)
+    phone_number = PhoneNumberField(
         unique=True,
-        help_text="Required. Used for login and M-Pesa transactions."
+        help_text="Required. International format (e.g., +254712345678). Used for login and M-Pesa."
     )
     
     # Optional fields
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True, unique=True)  # Added unique=True for future
     full_name = models.CharField(max_length=150, blank=True)
     date_joined = models.DateTimeField(default=timezone.now)
     last_login = models.DateTimeField(blank=True, null=True)
@@ -90,7 +85,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
     # Required by Django
     USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = []   # phone_number is already required, no other mandatory fields for createsuperuser
+    REQUIRED_FIELDS = []   # phone_number already required, no other mandatory fields for createsuperuser
     
     objects = UserManager()
     
