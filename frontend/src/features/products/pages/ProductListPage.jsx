@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import useProductStore from '../../../store/productStore'; // adjust path if needed
-import useCartStore from '../../../store/cartStore.js';
-import useAuthStore from '../../../store/authstore.js';
-import { formatKES } from '../../../shared/utils/formatKES';
+import useProductStore from '../../../store/productStore';
+import useCartStore from '../../../store/cartStore';
+import useAuthStore from '../../../store/authstore';
+import { formatKES } from '@/shared/utils/formatKES';   // ✅ fixed import using Vite alias
 
 export default function ProductListPage() {
   const { products, fetchProducts, filters, setFilters, isLoading } = useProductStore();
@@ -12,7 +12,7 @@ export default function ProductListPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]); // added fetchProducts as dependency (good practice)
 
   const handleSearch = () => {
     setFilters({ search: searchTerm });
