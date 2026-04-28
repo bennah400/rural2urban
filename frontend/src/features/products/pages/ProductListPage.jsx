@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import useProductStore from '../../../store/productStore';
 import useCartStore from '../../../store/cartStore';
 import useAuthStore from '../../../store/authstore';
-import { formatKES } from '@/shared/utils/formatKES';   // ✅ fixed import using Vite alias
+import { formatKES } from '@/features/shared/utils/formatKES';   // ✅ fixed import using Vite alias
 
 export default function ProductListPage() {
   const { products, fetchProducts, filters, setFilters, isLoading } = useProductStore();

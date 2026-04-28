@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import apiClient from '../services/apiClients';
+import apiClient from '../features/shared/services/apiClient';
 
 const useAuthStore = create((set, get) => ({
   user: null,
